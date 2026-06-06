@@ -46,8 +46,8 @@ class _SplashPageState extends State<SplashPage>
     _controller.forward();
 
     /// pindah ke welcome setelah animasi
-    Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/welcome');
+    Timer(const Duration(seconds: 10), () {
+      Navigator.pushReplacementNamed(context, '/main');
     });
   }
 

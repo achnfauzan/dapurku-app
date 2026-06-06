@@ -26,7 +26,7 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       body: pages[_index],
 bottomNavigationBar: BottomNavigationBar(
-  type: BottomNavigationBarType.fixed, // 🔑 PENTING
+  type: BottomNavigationBarType.fixed, 
   currentIndex: _index,
   onTap: (value) {
     setState(() {
@@ -39,11 +39,11 @@ bottomNavigationBar: BottomNavigationBar(
   items: const [
     BottomNavigationBarItem(
       icon: Icon(Icons.home),
-      label: 'Home',
+      label: 'Beranda',
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.explore),
-      label: 'Discover',
+      label: 'Pencarian',
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.favorite),

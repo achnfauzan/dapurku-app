@@ -1,7 +1,87 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    setState(() => _isLoading = true);
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      Navigator.pushReplacementNamed(context, '/main');
+    } on FirebaseAuthException catch (e) {
+      String message = 'Login gagal';
+      if (e.code == 'user-not-found') message = 'Email tidak ditemukan';
+      if (e.code == 'wrong-password') message = 'Password salah';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loginWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
+      final user = userCredential.user;
+
+      // Simpan ke Firestore kalau user baru
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        if (!doc.exists) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .set({
+                'displayName': user.displayName ?? '',
+                'bio': '',
+                'notifikasi': false,
+              });
+        }
+      }
+
+      Navigator.pushReplacementNamed(context, '/main');
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Login Google gagal: $e')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +99,7 @@ class LoginPage extends StatelessWidget {
               SizedBox(
                 height: 200,
                 child: Center(
-                  child: Image.asset(
-                    'assets/logoD.png',
-                    height: 200,
-                  ),
+                  child: Image.asset('assets/logoD.png', height: 200),
                 ),
               ),
 
@@ -30,7 +107,7 @@ class LoginPage extends StatelessWidget {
 
               /// ================= TITLE =================
               const Text(
-                "Login to your Account",
+                "Login ke akunmu",
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -42,6 +119,8 @@ class LoginPage extends StatelessWidget {
 
               /// ================= EMAIL =================
               TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: "Email",
                   filled: true,
@@ -61,6 +140,7 @@ class LoginPage extends StatelessWidget {
 
               /// ================= PASSWORD =================
               TextField(
+                controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: "Password",
@@ -84,9 +164,7 @@ class LoginPage extends StatelessWidget {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/main');
-                  },
+                  onPressed: _isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF60A5FA),
                     shape: RoundedRectangleBorder(
@@ -94,14 +172,16 @@ class LoginPage extends StatelessWidget {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    "Sign in",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          "Sign in",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
 
@@ -110,7 +190,7 @@ class LoginPage extends StatelessWidget {
               /// ================= OR =================
               Center(
                 child: Text(
-                  "- Or sign in with -",
+                  "- Atau Masuk Dengan -",
                   style: TextStyle(color: Colors.grey[500]),
                 ),
               ),
@@ -120,8 +200,11 @@ class LoginPage extends StatelessWidget {
               /// ================= SOCIAL LOGIN =================
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  SocialCircleButton(imagePath: 'assets/goggle.png'),
+                children: [
+                GestureDetector(
+                  onTap: _isLoading ? null : _loginWithGoogle,
+                  child: const SocialCircleButton(imagePath: 'assets/goggle.png'),
+                ),
                   SizedBox(width: 16),
                   SocialCircleButton(imagePath: 'assets/facebook.png'),
                   SizedBox(width: 16),
@@ -137,7 +220,7 @@ class LoginPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      "Don’t have an account? ",
+                      "Tidak punya akun? ",
                       style: TextStyle(color: Colors.black54),
                     ),
                     GestureDetector(
@@ -173,26 +256,19 @@ class SocialCircleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 60, // ⬅️ lebih besar
-      height: 60, // ⬅️ lebih besar
+      width: 60,
+      height: 60,
       decoration: BoxDecoration(
         shape: BoxShape.rectangle,
         borderRadius: BorderRadius.circular(10),
         color: Colors.white,
         boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 8,
-            offset: Offset(0, 3),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 3)),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(14), // ⬅️ logo ikut besar
-        child: Image.asset(
-          imagePath,
-          fit: BoxFit.contain,
-        ),
+        padding: const EdgeInsets.all(14),
+        child: Image.asset(imagePath, fit: BoxFit.contain),
       ),
     );
   }

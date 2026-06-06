@@ -1,7 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _register() async {
+    if (_passwordController.text.trim() != _confirmPasswordController.text.trim()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password tidak cocok')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      Navigator.pushReplacementNamed(context, '/main');
+    } on FirebaseAuthException catch (e) {
+      String message = 'Registrasi gagal';
+      if (e.code == 'email-already-in-use') message = 'Email sudah terdaftar';
+      if (e.code == 'weak-password') message = 'Password terlalu lemah (min. 6 karakter)';
+      if (e.code == 'invalid-email') message = 'Format email tidak valid';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +58,7 @@ class RegisterPage extends StatelessWidget {
               SizedBox(
                 height: 200,
                 child: Center(
-                  child: Image.asset(
-                    'assets/logoD.png',
-                    height: 200,
-                  ),
+                  child: Image.asset('assets/logoD.png', height: 200),
                 ),
               ),
 
@@ -30,7 +66,7 @@ class RegisterPage extends StatelessWidget {
 
               /// ================= TITLE =================
               const Text(
-                "Create your Account",
+                "Membuat akun",
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -42,13 +78,14 @@ class RegisterPage extends StatelessWidget {
 
               /// ================= EMAIL =================
               TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: "Email",
                   filled: true,
                   fillColor: Colors.grey[100],
                   contentPadding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 16,
+                    vertical: 16, horizontal: 16,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -61,14 +98,14 @@ class RegisterPage extends StatelessWidget {
 
               /// ================= PASSWORD =================
               TextField(
+                controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: "Password",
                   filled: true,
                   fillColor: Colors.grey[100],
                   contentPadding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 16,
+                    vertical: 16, horizontal: 16,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -81,14 +118,14 @@ class RegisterPage extends StatelessWidget {
 
               /// ================= CONFIRM PASSWORD =================
               TextField(
+                controller: _confirmPasswordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: "Confirm Password",
                   filled: true,
                   fillColor: Colors.grey[100],
                   contentPadding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 16,
+                    vertical: 16, horizontal: 16,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -104,9 +141,7 @@ class RegisterPage extends StatelessWidget {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/main');
-                  },
+                  onPressed: _isLoading ? null : _register,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF60A5FA),
                     shape: RoundedRectangleBorder(
@@ -114,14 +149,16 @@ class RegisterPage extends StatelessWidget {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    "Sign up",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          "Sign up",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
 
@@ -130,7 +167,7 @@ class RegisterPage extends StatelessWidget {
               /// ================= OR =================
               Center(
                 child: Text(
-                  "- Or sign up with -",
+                  "- Atau Mendaftar Dengan -",
                   style: TextStyle(color: Colors.grey[500]),
                 ),
               ),
@@ -157,7 +194,7 @@ class RegisterPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      "Already have an account? ",
+                      "Sudah punya akun? ",
                       style: TextStyle(color: Colors.black54),
                     ),
                     GestureDetector(
@@ -209,10 +246,7 @@ class SocialCircleButton extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
-        child: Image.asset(
-          imagePath,
-          fit: BoxFit.contain,
-        ),
+        child: Image.asset(imagePath, fit: BoxFit.contain),
       ),
     );
   }

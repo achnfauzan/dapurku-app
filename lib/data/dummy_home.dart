@@ -9,6 +9,7 @@ class Recipe {
   final String duration;
   final List<String> ingredients;
   final List<String> steps;
+  final String? authorId;
 
   Recipe({
     required this.title,
@@ -20,55 +21,19 @@ class Recipe {
     required this.ingredients,
     required this.steps,
     required this.history,
+    this.authorId,
   });
 }
- List<Map<String, String>> topChefs = [
-  {
-    'name': 'Chef Arif',
-    'image': '../assets/pp/c1.jpg',
-  },
-  {
-    'name': 'Chef Dinda',
-    'image': '../assets/pp/c2.jpg',
-  },
-  {
-    'name': 'Chef Raka',
-    'image': '../assets/pp/c3.jpg',
-  },
-  {
-    'name': 'Chef Sinta',
-    'image': '../assets/pp/c4.jpg',
-  },
-  {
-    'name': 'Chef Bayu',
-    'image': '../assets/pp/c5.jpg',
-  },
+List<Map<String, String>> topChefs = [
+  {'name': 'Chef Arif',  'image': 'assets/pp/c1.jpg'}, 
+  {'name': 'Chef Dinda', 'image': 'assets/pp/c2.jpg'}, 
+  {'name': 'Chef Raka',  'image': 'assets/pp/c3.jpg'},
+  {'name': 'Chef Sinta', 'image': 'assets/pp/c4.jpg'},
+  {'name': 'Chef Bayu',  'image': 'assets/pp/c5.jpg'}, 
 ];
-
 
 // ================= DUMMY DATA =================
 final List<Recipe> popularRecipes = [
-  Recipe(
-    title: 'Sate Sapi',
-    description: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry',
-    image: 'assets/sateSapi.jpg',
-    category: 'Makan Malam',
-    rating: 4.5,
-    duration: '30 mnt',
-    history: '2 menit yang lalu',
-    ingredients: [
-      '500 gram daging sapi',
-      'Tusuk sate',
-      'Kecap manis',
-      'Bawang merah',
-    ],
-    steps: [
-      'Potong daging sapi kecil-kecil',
-      'Tusuk daging ke tusuk sate',
-      'Bakar sambil dioles bumbu',
-      'Sajikan hangat',
-    ],
-  ),
 
   Recipe(
     title: 'Nasi Goreng',
@@ -248,6 +213,7 @@ final initialTags = [
   'Pedas',
   'Makan Malam',
   'Minuman',
+  'Sup',
 ];
 
 final additionalTags = [

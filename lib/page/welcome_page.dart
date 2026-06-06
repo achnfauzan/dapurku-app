@@ -25,7 +25,7 @@ class WelcomePage extends StatelessWidget {
 
               /// ================= TITLE =================
               const Text(
-                "Welcome to Dapurku",
+                "Selamat Datang di Dapurku",
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -37,7 +37,7 @@ class WelcomePage extends StatelessWidget {
 
               /// ================= SUBTITLE =================
               const Text(
-                "Find and save your favorite recipes\nright from your own kitchen",
+                "Temukan dan simpan resep favorit Anda.\nlangsung dari dapur Anda sendiri",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
